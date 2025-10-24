@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const dataFormat = {
+export const dataFormat = {
     "day": {
         "menu": "menu_name",
         "price": "00",
@@ -68,7 +68,7 @@ function initializeDataFiles(targetYear) {
         const filePath = path.join(yearDirectory, monthFileName);
 
         if (!isFileExist(filePath)) {
-            console.log(`[JSON_HELPER] ${monthFileName}.json 파일이 없습니다. 파일을 새로 생성합니다.`);
+            console.log(`[JSON_HELPER] ${monthFileName} 파일이 없습니다. 파일을 새로 생성합니다.`);
 
             writeFile(filePath, dataFormat);
         }
