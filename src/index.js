@@ -7,7 +7,9 @@ import {
 import dotenv from "dotenv";
 dotenv.config();
 
-import { initializeDataFiles } from "./data/jsonHelper.js";
+import path from "path";
+
+import * as jsonHelper from "./data/jsonHelper.js";
 
 const client = new Client({
     intents: [
@@ -25,7 +27,13 @@ const thisYear = () => {
 client.on("ready", async () => {
     console.log("[!] ready");
 
-    initializeDataFiles(thisYear());
+    jsonHelper.initializeDataFiles(thisYear());
+
+    const dir = path.join('./src/data/2025/01.json');
+
+    const data = jsonHelper.readFile(dir);
+
+    console.log(data);
 })
 
 client.login(process.env.TOKEN);
