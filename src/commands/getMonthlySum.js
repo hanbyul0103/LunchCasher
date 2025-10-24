@@ -12,7 +12,7 @@ export default {
             description: '불러올 달',
             required: false,
             type: ApplicationCommandOptionType.Integer,
-            min_value: 0,
+            min_value: 1,
             max_value: 12,
         },
     ],
