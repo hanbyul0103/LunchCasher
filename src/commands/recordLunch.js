@@ -3,6 +3,16 @@ import {
     ApplicationCommandOptionType,
 } from 'discord.js';
 
+// 라이브러리
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 외부 함수들
+import * as jsonHelper from "../data/jsonHelper.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default {
     name: 'record-lunch',
     description: '점심을 기록합니다.',
@@ -24,7 +34,7 @@ export default {
             description: '월',
             required: false,
             type: ApplicationCommandOptionType.Integer,
-            min_value: 0,
+            min_value: 1,
             max_value: 12,
         },
         {
@@ -43,9 +53,37 @@ export default {
         let day = interaction.options?.getInteger('day');
 
         if (!month) month = date().month;
+        month = month.toString().padStart(2, '0');
         if (!day) day = date().day;
 
-        console.log(`${month} ${day} ${menu} ${price}`);
+        const dataPath = path.join(__dirname, `../data/2025`);
+        const targetFile = path.join(dataPath, `${month}.json`);
+
+        let data = jsonHelper.readFile(targetFile);
+
+        const newData = { day, menu, price };
+
+        let inserted = false;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].day > day) {
+                data.splice(i, 0, newData);
+                inserted = true;
+                break;
+            } else if (data[i].day === day) {
+                // 같은 날짜가 이미 있으면 덮어쓰기
+                data[i] = newData;
+                inserted = true;
+                break;
+            }
+        }
+
+        if (!inserted) data.push(newData); // 마지막에 추가
+
+        jsonHelper.writeFile(targetFile, data);
+
+        console.log(JSON.stringify(data, null, 2));
+
+        await interaction.reply({ content: `${month}/${day} 점심 기록 ${menu}: ${price}` });
     },
 };
 
