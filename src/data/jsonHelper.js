@@ -2,13 +2,6 @@
 import fs from 'fs';
 import path from 'path';
 
-export const dataFormat = {
-    "day": {
-        "menu": "menu_name",
-        "price": "00",
-    }
-};
-
 function isFileExist(filePath) {
     return fs.existsSync(filePath);
 }
@@ -70,14 +63,7 @@ function initializeDataFiles(targetYear) {
         if (!isFileExist(filePath)) {
             console.log(`[JSON_HELPER] ${monthFileName} 파일이 없습니다. 파일을 새로 생성합니다.`);
 
-            writeFile(filePath, dataFormat);
-        }
-        else {
-            const data = readFile(filePath);
-
-            if (data == {}) {
-                writeFile(filePath, dataFormat);
-            }
+            writeFile(filePath, []);
         }
     }
 
