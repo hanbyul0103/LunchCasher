@@ -1,4 +1,4 @@
-function sum(array) {
+function sumArray(array) {
     if (array.length === 0) return 0;
 
     let sum = 0;
@@ -10,11 +10,13 @@ function sum(array) {
     return sum;
 }
 
-function average(array) {
-    const sum = sum(array);
+function averageArray(array) {
+    if (array.length === 0) return 0;
+
+    const sum = sumArray(array);
     const average = sum / array.length;
 
     return average;
 }
 
-export { sum, average };
+export { sumArray, averageArray };
