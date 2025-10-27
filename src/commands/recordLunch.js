@@ -7,7 +7,7 @@ import {
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 외부 함수들
+// 외부 함수
 import * as jsonHelper from "../data/jsonHelper.js";
 
 import { ThisYear } from '../utils/Core/getThisYear.js';
