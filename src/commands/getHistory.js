@@ -32,6 +32,7 @@ export default {
 
         if (month == null) month = new Date().getMonth() + 1;
 
+        // 규격 맞추기
         month = month.toString().padStart(2, '0');
 
         let fields = [];
