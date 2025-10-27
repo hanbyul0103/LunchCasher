@@ -10,6 +10,8 @@ import { fileURLToPath } from 'url';
 // 외부 함수들
 import * as jsonHelper from "../data/jsonHelper.js";
 
+import { ThisYear } from '../utils/Core/getThisYear.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -56,7 +58,7 @@ export default {
         month = month.toString().padStart(2, '0');
         if (!day) day = date().day;
 
-        const dataPath = path.join(__dirname, `../data/2025`);
+        const dataPath = path.join(__dirname, `../data/${ThisYear()}`);
         const targetFile = path.join(dataPath, `${month}.json`);
 
         let data = jsonHelper.readFile(targetFile);
@@ -80,8 +82,6 @@ export default {
         if (!inserted) data.push(newData); // 마지막에 추가
 
         jsonHelper.writeFile(targetFile, data);
-
-        console.log(JSON.stringify(data, null, 2));
 
         await interaction.reply({ content: `${month}/${day} 점심 기록 ${menu}: ${price}` });
     },

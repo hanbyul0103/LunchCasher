@@ -12,6 +12,8 @@ import * as jsonHelper from "../data/jsonHelper.js";
 import * as embedGenerator from "../utils/embedGenerator.js";
 import * as monthlyCalculator from "../utils/monthlyCalculator.js";
 
+import { ThisYear } from '../utils/Core/getThisYear.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -35,14 +37,14 @@ export default {
 
         month = month.toString().padStart(2, '0');
 
-        const dataPath = path.join(__dirname, `../data/2025`);
+        const dataPath = path.join(__dirname, `../data/${ThisYear()}`);
         const targetFile = path.join(dataPath, `${month}.json`);
 
         const data = jsonHelper.readFile(targetFile);
 
         const value = data.map(d => d.price);
 
-        const sum = monthlyCalculator.sum(value);
+        const sum = monthlyCalculator.sumArray(value);
         const fields = [{
             name: `${month}월 총합`,
             value: `${sum}원`,
@@ -51,7 +53,7 @@ export default {
 
         const embed = embedGenerator.createEmbed({
             title: "명세서",
-            description: "2025년 통계",
+            description: `${ThisYear()}년 통계`,
             fields: fields,
             timestamp: true
         });

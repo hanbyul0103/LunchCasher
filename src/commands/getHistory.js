@@ -11,6 +11,8 @@ import { fileURLToPath } from 'url';
 import * as jsonHelper from "../data/jsonHelper.js";
 import * as embedGenerator from "../utils/embedGenerator.js";
 
+import { ThisYear } from '../utils/Core/getThisYear.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -49,7 +51,7 @@ export default {
 
         const specificationEmbed = embedGenerator.createEmbed({
             title: "명세서",
-            description: "2025년 통계",
+            description: `${ThisYear()}년 통계`,
             fields: fields,
             timestamp: true
         });
@@ -59,7 +61,7 @@ export default {
 };
 
 function getEmbedFields(month, fields) {
-    const dataPath = path.join(__dirname, `../data/2025`);
+    const dataPath = path.join(__dirname, `../data/${ThisYear()}`);
     const targetFile = path.join(dataPath, `${month}.json`);
 
     const data = jsonHelper.readFile(targetFile);

@@ -14,6 +14,8 @@ import * as jsonHelper from "./data/jsonHelper.js";
 import * as commandRegister from "./utils/commandRegister.js";
 import * as loadCommands from "./utils/loadCommands.js";
 
+import { ThisYear } from "./utils/Core/getThisYear.js";
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -25,10 +27,6 @@ const client = new Client({
 
 let commands;
 
-const thisYear = () => {
-    return new Date().getFullYear();
-}
-
 client.once("ready", async () => {
     console.log("[!] ready");
 
@@ -38,7 +36,7 @@ client.once("ready", async () => {
     commands = await loadCommands.getCommands();
 
     // 폴더 및 파일 세팅
-    jsonHelper.initializeDataFiles(thisYear());
+    jsonHelper.initializeDataFiles(ThisYear());
 });
 
 client.on("interactionCreate", async (interaction) => {
