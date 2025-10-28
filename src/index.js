@@ -7,7 +7,7 @@ import {
 import dotenv from "dotenv";
 dotenv.config();
 
-// 외부 함수들
+// 외부 함수
 import * as eventHandler from "./utils/eventHandler.js";
 
 const client = new Client({

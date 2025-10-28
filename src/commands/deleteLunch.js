@@ -12,7 +12,6 @@ import * as jsonHelper from "../data/jsonHelper.js";
 import * as embedGenerator from "../utils/embedGenerator.js";
 
 import { ThisYear } from '../utils/Core/getThisYear.js';
-import { setInterval, setTimeout } from "timers/promises";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
