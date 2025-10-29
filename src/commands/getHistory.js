@@ -66,7 +66,7 @@ function getEmbedFields(month, fields) {
 
     const data = jsonHelper.readFile(targetFile);
 
-    const value = data.map(d => `${d.day}일\t${d.menu}\t${d.price}원`).join('\n');
+    const value = data.map(d => `${d.day.toString().padStart(2, ' ')}일 ${d.menu} ${d.price}원`).join('\n');
 
     fields.push({
         name: `${month}월`,

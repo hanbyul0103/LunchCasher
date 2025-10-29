@@ -96,7 +96,7 @@ function getEmbedFields(targetFile, fields, month, deletedDay = null) {
     const data = jsonHelper.readFile(targetFile);
 
     const value = data.map(d => {
-        const line = `${d.day}일\t${d.menu}\t${d.price}원`;
+        const line = `${d.day.toString().padStart(2, ' ')}일 ${d.menu} ${d.price}원`;
         return (d.day === deletedDay) ? `- ${line}` : line;
     }).join('\n');
 
