@@ -23,7 +23,7 @@ export default {
         {
             name: 'month',
             description: '월',
-            required: true,
+            required: false,
             type: ApplicationCommandOptionType.Integer,
             min_value: 1,
             max_value: 12,
@@ -31,7 +31,7 @@ export default {
         {
             name: 'day',
             description: '일',
-            required: true,
+            required: false,
             type: ApplicationCommandOptionType.Integer,
             min_value: 1,
             max_value: 31,
@@ -52,35 +52,34 @@ export default {
 
         let data = jsonHelper.readFile(targetFile);
 
-        getEmbedFields(targetFile, fields, month);
+        const deletedItem = data.find(d => d.day === day);
+        getEmbedFields(targetFile, fields, month, deletedItem?.day);
 
-        let specificationEmbed = embedGenerator.createEmbed({
+        const specificationEmbed = embedGenerator.createEmbed({
             title: "명세서",
             description: `${ThisYear()}년 통계`,
             fields: fields,
             timestamp: true
         });
 
-        // 임베드 부분에 ```diff - field``` 이렇게 해서 딱 보이게
         await interaction.reply({ embeds: [specificationEmbed] });
 
         data = data.filter(d => d.day !== day);
-
         jsonHelper.writeFile(targetFile, data);
 
-        fields = [];
+        setTimeout(async () => {
+            let newFields = [];
+            getEmbedFields(targetFile, newFields, month);
 
-        getEmbedFields(targetFile, fields, month);
+            const updatedEmbed = embedGenerator.createEmbed({
+                title: "명세서",
+                description: `${ThisYear()}년 통계`,
+                fields: newFields,
+                timestamp: true
+            });
 
-        specificationEmbed = embedGenerator.createEmbed({
-            title: "명세서",
-            description: `${ThisYear()}년 통계`,
-            fields: fields,
-            timestamp: true
-        });
-
-        // 이거 2초 뒤에 해야되는데
-        await interaction.editReply({ embeds: [specificationEmbed] });
+            await interaction.editReply({ embeds: [updatedEmbed] });
+        }, 3000);
     }
 }
 
@@ -93,10 +92,13 @@ function date() {
     }
 }
 
-function getEmbedFields(targetFile, fields, month) {
+function getEmbedFields(targetFile, fields, month, deletedDay = null) {
     const data = jsonHelper.readFile(targetFile);
 
-    const value = data.map(d => `${d.day}일\t${d.menu}\t${d.price}원`).join('\n');
+    const value = data.map(d => {
+        const line = `${d.day}일\t${d.menu}\t${d.price}원`;
+        return (d.day === deletedDay) ? `- ${line}` : line;
+    }).join('\n');
 
     fields.push({
         name: `${month}월`,

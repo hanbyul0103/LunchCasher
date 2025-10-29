@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 
 // 외부 함수
 import * as jsonHelper from "../data/jsonHelper.js";
+import * as embedGenerator from "../utils/embedGenerator.js";
 
 import { ThisYear } from '../utils/Core/getThisYear.js';
 
@@ -83,7 +84,19 @@ export default {
 
         jsonHelper.writeFile(targetFile, data);
 
-        await interaction.reply({ content: `${month}/${day} 점심 기록 ${menu}: ${price}` });
+        const recordedItem = data.find(d => d.day === day);
+
+        let fields = [];
+        getEmbedFields(targetFile, fields, month, recordedItem?.day);
+
+        const specificationEmbed = embedGenerator.createEmbed({
+            title: "명세서",
+            description: `${ThisYear()}년 통계`,
+            fields: fields,
+            timestamp: true
+        });
+
+        await interaction.reply({ embeds: [specificationEmbed] });
     },
 };
 
@@ -94,4 +107,21 @@ function date() {
         month: today.getMonth() + 1,
         day: today.getDate()
     }
+}
+
+function getEmbedFields(targetFile, fields, month, recordedDay = null) {
+    const data = jsonHelper.readFile(targetFile);
+
+    const value = data.map(d => {
+        const line = `${d.day}일\t${d.menu}\t${d.price}원`;
+        return (d.day === recordedDay) ? `+ ${line}` : line;
+    }).join('\n');
+
+    fields.push({
+        name: `${month}월`,
+        value: value,
+        inline: true
+    });
+
+    return;
 }

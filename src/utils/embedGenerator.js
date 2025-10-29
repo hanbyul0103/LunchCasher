@@ -8,7 +8,7 @@ function createEmbed({ title, description, fields = [], timestamp = false }) {
     if (fields.length > 0) {
         embed.addFields(fields.map(f => ({
             name: f.name,
-            value: f.value,
+            value: `\`\`\`diff\n${f.value}\n\`\`\``,
             inline: f.inline || false
         })));
     }
