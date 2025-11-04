@@ -34,6 +34,12 @@ export default {
             return await interaction.reply({ content: '이미지 파일만 업로드할 수 있습니다.', ephemeral: true, });
         }
 
+        captureImage(image);
+
         await interaction.reply({ content: `${image.url}` });
     },
 };
+
+function captureImage(image) {
+    // ocr
+}

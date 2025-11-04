@@ -71,7 +71,7 @@ function getEmbedFields(month, fields) {
     fields.push({
         name: `${month}월`,
         value: value,
-        inline: true
+        inline: false
     });
 
     return;
