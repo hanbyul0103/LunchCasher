@@ -6,6 +6,7 @@ import {
 // 라이브러리
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Jimp } from 'jimp';
 
 // 외부 함수
 import * as jsonHelper from "../data/jsonHelper.js";
@@ -45,64 +46,79 @@ export default {
     },
 };
 
-/**
- * 1️⃣ OCR 결과 정제 (원시 OCR JSON → { text, x, y } 형태로 정리)
- */
-function normalizeOCRResult(rawOCR) {
-    // TODO: OCR 라이브러리 결과 형식에 맞게 텍스트, 좌표만 추출
-    // return [{ text, x, y }, ...]
+async function handleReceiptImage(message, imageUrl) {
+    const preprocessed = await preprocessImage(imageUrl);
+    const ocrResult = await runClovaOCR(preprocessed);
+    const structuredData = await analyzeReceiptWithDeepSeek(ocrResult);
+    await saveReceiptData(structuredData);
+    await replyWithSummary(message, structuredData);
 }
 
-/**
- * 2️⃣ OCR 결과에서 날짜 추출
- */
-function extractDate(ocrData) {
-    // TODO: 날짜 정규식 기반 탐색
-    // return "2025-11-11" or null
+async function preprocessImage(imageUrl) {
+    const image = await Jimp.read(imageUrl);
+
+    image.greyscale();
+
+    image.blur(1);
+
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
+        const gray = this.bitmap.data[idx];
+        const val = gray > 128 ? 255 : 0;
+        this.bitmap.data[idx] = val;
+        this.bitmap.data[idx + 1] = val;
+        this.bitmap.data[idx + 2] = val;
+    });
+
+    image.contrast(0.3);
+
+    if (image.bitmap.width < 1000)
+        image.resize(1000, Jimp.AUTO);
+
+    image.convolute([
+        [0, -1, 0],
+        [-1, 5, -1],
+        [0, -1, 0],
+    ]);
+
+    const buffer = await image.getBufferAsync(Jimp.MIME_JPEG);
+    
+    return buffer.toString("base64");
 }
 
-/**
- * 3️⃣ OCR 결과에서 가게 이름 추출
- */
-function extractStoreName(ocrData) {
-    // TODO: 상단부 한글 텍스트 탐색
-    // return "스타벅스 강남점" or null
+async function runClovaOCR(imageBase64) {
+    // 입력: 전처리된 base64 이미지
+    // 출력: 클로바 OCR JSON 결과
+    // 참고: https://api.ncloud-docs.com/docs/ai-application-ocr-ocrgeneral
 }
 
-/**
- * 4️⃣ OCR 결과를 줄 단위로 묶기 (y좌표 기준)
- */
-function groupByLine(ocrData) {
-    // TODO: y 좌표 가까운 요소끼리 묶기
-    // return [[{ text, x, y }, ...], ...]
+async function analyzeReceiptWithDeepSeek(ocrData) {
+    // 입력: OCR JSON (텍스트 목록 포함)
+    // 출력: 구조화된 영수증 데이터 JSON
+    // 예시 출력:
+    // {
+    //   date: "2025-11-11",
+    //   store: "스타벅스 홍대점",
+    //   items: [
+    //     { name: "아메리카노", price: 4500 },
+    //     { name: "샌드위치", price: 6500 }
+    //   ],
+    //   total: 11000
+    // }
 }
 
-/**
- * 5️⃣ 품목 및 가격 목록 추출
- */
-function extractItems(lines) {
-    // TODO: 각 줄에서 이름과 가격 매칭
-    // return [{ name, price }, ...]
+async function saveReceiptData(structuredData) {
+    // 입력: DeepSeek이 생성한 JSON
+    // 출력: 없음
+    // 예시: Firebase, MongoDB, Supabase 등 저장
 }
 
-/**
- * 6️⃣ 합계(총액) 추출
- */
-function extractTotal(lines) {
-    // TODO: "합계", "총액", "TOTAL" 등의 키워드로 탐색
-    // return number or null
-}
-
-/**
- * 7️⃣ 전체 영수증 정보 파싱 (최종 조합)
- */
-function parseReceipt(rawOCR) {
-    const ocrData = normalizeOCRResult(rawOCR);
-    const date = extractDate(ocrData);
-    const storeName = extractStoreName(ocrData);
-    const lines = groupByLine(ocrData);
-    const items = extractItems(lines);
-    const total = extractTotal(lines);
-
-    return { storeName, date, items, total };
+async function replyWithSummary(message, structuredData) {
+    // 입력: 디스코드 메시지, 분석 결과 JSON
+    // 출력: 없음
+    // 예시 메시지:
+    // 📅 2025-11-11
+    // 🏪 스타벅스 홍대점
+    // 🍽️ 아메리카노 - 4500원
+    // 🍽️ 샌드위치 - 6500원
+    // 💰 합계: 11000원
 }
