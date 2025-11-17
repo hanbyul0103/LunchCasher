@@ -3,10 +3,17 @@ import {
     ApplicationCommandOptionType,
 } from 'discord.js';
 
+//env설정
+import dotenv from "dotenv";
+dotenv.config();
+
 // 라이브러리
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Jimp } from 'jimp';
+import { Jimp, JimpMime } from 'jimp';
+import axios from 'axios';
+import fs from 'fs';
+import sharp from 'sharp';
 
 // 외부 함수
 import * as jsonHelper from "../data/jsonHelper.js";
@@ -31,34 +38,42 @@ export default {
     callback: async (client, interaction) => {
         const image = interaction.options.getAttachment('image');
 
+        await interaction.deferReply({ ephemeral: true });
+
         if (!image || !image.contentType?.startsWith('image/')) {
-            return await interaction.reply({ content: '이미지 파일만 업로드할 수 있습니다.', ephemeral: true, });
+            return await interaction.editReply({ content: '이미지 파일만 업로드할 수 있습니다.' });
         }
 
-        const data = parseReceipt(image);
+        const data = await handleReceiptImage(image.url);
 
-        console.log(`data: ${data.date}`);
-        console.log(`storeName: ${data.storeName}`);
-        console.log(`items: ${data.items}`);
-        console.log(`total: ${data.total}`);
+        // console.log(`data: ${data.date}`);
+        // console.log(`storeName: ${data.storeName}`);
+        // console.log(`items: ${data.items}`);
+        // console.log(`total: ${data.total}`);
 
-        await interaction.reply({ content: `${image.url}` });
+        await interaction.editReply({ content: `${image.url}` });
     },
 };
 
-async function handleReceiptImage(message, imageUrl) {
+async function handleReceiptImage(imageUrl) {
     const preprocessed = await preprocessImage(imageUrl);
     const ocrResult = await runClovaOCR(preprocessed);
-    const structuredData = await analyzeReceiptWithDeepSeek(ocrResult);
-    await saveReceiptData(structuredData);
-    await replyWithSummary(message, structuredData);
+    // const structuredData = await analyzeReceiptWithDeepSeek(ocrResult);
+    // await saveReceiptData(structuredData);
+    // await replyWithSummary(message, structuredData);
 }
 
 async function preprocessImage(imageUrl) {
-    const image = await Jimp.read(imageUrl);
+    const { data } = await axios.get(imageUrl, { responseType: "arraybuffer" });
+
+    const resizedBuffer = await sharp(data)
+        .resize({ width: 2000, withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
+    const image = await Jimp.read(resizedBuffer);
 
     image.greyscale();
-
     image.blur(1);
 
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
@@ -71,7 +86,9 @@ async function preprocessImage(imageUrl) {
 
     image.contrast(0.3);
 
-    if (image.bitmap.width < 1000)
+    if (image.bitmap.width > 2000)
+        image.scaleToFit(2000, Jimp.AUTO);
+    else if (image.bitmap.width < 1000)
         image.resize(1000, Jimp.AUTO);
 
     image.convolute([
@@ -80,15 +97,53 @@ async function preprocessImage(imageUrl) {
         [0, -1, 0],
     ]);
 
-    const buffer = await image.getBufferAsync(Jimp.MIME_JPEG);
-    
+    const buffer = await new Promise((resolve, reject) => {
+        image.getBuffer(JimpMime.jpeg, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        });
+    });
+
     return buffer.toString("base64");
 }
 
 async function runClovaOCR(imageBase64) {
-    // 입력: 전처리된 base64 이미지
-    // 출력: 클로바 OCR JSON 결과
-    // 참고: https://api.ncloud-docs.com/docs/ai-application-ocr-ocrgeneral
+    const config = {
+        headers: {
+            "Content-Type": "application/json",
+            "X-OCR-SECRET": process.env.CLOVA_SECRET,
+        },
+    };
+
+    try {
+        const response = await axios.post(process.env.CLOVA_API_URL, {
+            images: [
+                {
+                    format: "jpg",
+                    name: "receipt",
+                    data: imageBase64,
+                },
+            ],
+            lang: "ko",
+            version: "V1",
+        }, config);
+
+        let sumText = "";
+        const fields = response.data.images[0].fields;
+        fields.forEach(f => {
+            sumText += " " + f.inferText;
+        });
+
+        console.log("-------------------");
+        console.log(sumText);
+        console.log("-------------------");
+
+        return sumText;
+
+    } catch (error) {
+        console.error("CLOVA OCR Error:", error.response?.data || error.message);
+        throw error;
+    }
 }
 
 async function analyzeReceiptWithDeepSeek(ocrData) {

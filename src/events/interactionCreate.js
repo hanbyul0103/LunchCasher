@@ -11,7 +11,7 @@ export default {
             await command.callback(client, interaction);
         } catch (error) {
             console.error(`[INTERACTION_CREATE] 명령어 실행 중 오류 발생:`, error);
-            await interaction.reply({
+            await interaction.editReply({
                 content: "명령어 실행 중 예상치 못한 오류가 발생했습니다.",
                 ephemeral: true,
             });
