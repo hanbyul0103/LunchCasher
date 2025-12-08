@@ -104,10 +104,7 @@ async function runClovaOCR(imageBase64) {
         console.error('영수증 결과를 찾을 수 없습니다:', response.data);
         throw new Error('영수증 인식 결과가 없습니다.');
     }
-
-    // ----------------------------
-    // ① 메뉴 이름 + 가격만 뽑기
-    // ----------------------------
+    
     const items = result.subResults?.flatMap(sub => sub.items || []) ?? [];
 
     const menus = items.map(item => {
@@ -121,10 +118,7 @@ async function runClovaOCR(imageBase64) {
             price: Number(priceStr),
         };
     });
-
-    // ----------------------------
-    // ② 날짜 → 월, 일 나누기
-    // ----------------------------
+    
     const formatted = result.paymentInfo?.date?.formatted;
 
     const month = formatted?.month ? Number(formatted.month) : null;
